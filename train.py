@@ -47,6 +47,8 @@ def main():
         args['shape'] = [360, 640]
     elif args['dataset'] == 'TRANCOS':
         args['shape'] = [360, 480]
+    elif args['dataset'] == 'dronebird':
+        args['shape'] = [1080, 1920]
     
     save_path = './models/' + args['dataset']
     print(args)
@@ -75,7 +77,7 @@ def main():
     valid_transf = NP_T.ToTensor()
 
     # instantiate the dataset
-    dataset_path = os.path.join('E://code//Traffic//Counting//Datasets', args['dataset'])
+    dataset_path = os.path.join('../../ds', args['dataset'])
     train_data = CrowdSeq(train=True,
                           path=dataset_path,
                           out_shape=args['shape'],

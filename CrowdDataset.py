@@ -342,13 +342,13 @@ if __name__ == '__main__':
     #     aa = 1
     #     print('Image {}: count={}, density_sum={:.3f}'.format(
     #         i, count.sum(), density.sum()))
-    dataset = 'UCSD'
+    dataset = 'FDST'
     if dataset == 'UCSD':
         path = './ucsdpeds/UCSD'
     elif dataset == 'Mall':
-        path = './mall_dataset/Mall'
+        path = './mall_dataset'
     elif dataset == 'FDST':
-        path = './FDST/FDST'
+        path = '../../ds/FDST'
     data = CrowdSeq(train=False,
                     path=path,
                     load_all=False,
