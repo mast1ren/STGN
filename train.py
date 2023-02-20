@@ -11,7 +11,8 @@ import torchvision.transforms as T
 import torch.nn.functional as F
 
 import np_transforms as NP_T
-from CrowdDataset import CrowdSeq
+from dataset import CrowdSeq
+# from CrowdDataset import CrowdSeq
 from model import STGN
 
 
@@ -20,7 +21,7 @@ def main():
         description='Train CSRNet in Crowd dataset.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--model_path', default='STGN.pth', type=str)
-    parser.add_argument('--dataset', default='Venice', type=str)
+    parser.add_argument('--dataset', default='dronebird', type=str)
     parser.add_argument('--valid', default=0, type=float)
     parser.add_argument('--lr', default=1e-5, type=float)
     parser.add_argument('--epochs', default=120, type=int)
@@ -48,7 +49,7 @@ def main():
     elif args['dataset'] == 'TRANCOS':
         args['shape'] = [360, 480]
     elif args['dataset'] == 'dronebird':
-        args['shape'] = [1080, 1920]
+        args['shape'] = [480, 640]
     
     save_path = './models/' + args['dataset']
     print(args)
@@ -78,7 +79,7 @@ def main():
 
     # instantiate the dataset
     dataset_path = os.path.join('../../ds', args['dataset'])
-    train_data = CrowdSeq(train=True,
+    train_data = CrowdSeq(mode='train',
                           path=dataset_path,
                           out_shape=args['shape'],
                           transform=train_transf,
@@ -86,7 +87,7 @@ def main():
                           max_len=args['max_len'],
                           load_all=args['load_all'],
                           adaptive=args['adaptive'])
-    valid_data = CrowdSeq(train=False,
+    valid_data = CrowdSeq(mode='val',
                           path=dataset_path,
                           out_shape=args['shape'],
                           transform=valid_transf,
@@ -142,7 +143,7 @@ def main():
             density_loss = torch.sum((density_pred - density)**2) / (2 * N)
             count_loss = torch.sum((count_pred - count)**2) / (2 * N)
             loss = density_loss
-
+            print("\repoch:{}\t[{:>{}}/{}]\tpred: {:.2f}\tgt: {:.2f}\tloss: {:.4f}".format(epoch, i, len(str(len(train_loader))), len(train_loader), torch.sum(count_pred).item()/N, torch.sum(count).item()/N, loss.item()), end='')
             # backward pass and optimization step
             optimizer.zero_grad()
             loss.backward()
@@ -153,6 +154,7 @@ def main():
             with torch.no_grad():
                 count_err = torch.sum(torch.abs(count_pred - count)) / N
             count_err_hist.append(count_err.item())
+        print()
         lr_scheduler.step()
         t1 = time.time()
 
@@ -175,11 +177,12 @@ def main():
         mse_hist = []
         mae_hist = []
         X, density, count = None, None, None
+        print("val begin")
         t0 = time.time()
         val_loss = 0
         for i, (X, density, count, seq_len) in enumerate(valid_loader):
-            X, density, count, seq_len = X.to(device), density.to(
-                device), count.to(device), seq_len.to(device)
+            # print(X,density,count,seq_len)
+            X, density, count, seq_len = X.to(device), density.to(device), count.to(device), seq_len.to(device)
 
             # forward pass through the model
             with torch.no_grad():
@@ -192,6 +195,7 @@ def main():
             
             density_loss = torch.sum((density_pred - density)**2) / (2 * N)
             loss = density_loss
+            print("\repoch:{}\t[{:>{}}/{}]\tpred: {:.2f}\tgt: {:.2f}\tloss: {:.4f}".format(epoch, i, len(str(len(valid_loader))), len(valid_loader), torch.sum(count_pred).item()/N, torch.sum(count).item()/N, loss.item()), end='')
 
             # save the loss values
             loss_hist.append(loss.item())

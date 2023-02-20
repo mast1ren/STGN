@@ -41,7 +41,7 @@ class CrowdDataset(Dataset):
         self.image_files = glob.glob(os.path.join(self.img_path, '*.jpg'))
 
         if self.load_all:
-            if self.mode == 'train':
+            if self.mode == 'train' or self.mode == 'val':
                 self.images, self.gts, self.densities = [], [], []
                 for img_f in self.image_files:
                     X, density, gt = self.load_example(img_f, self.mode)
@@ -65,7 +65,7 @@ class CrowdDataset(Dataset):
             # img = img.resize((self.out_shape[1], self.out_shape[0]), Image.BILINEAR)
             img = cv2.resize(img, (self.out_shape[1], self.out_shape[0]), cv2.INTER_LINEAR)
             ratio = self.out_shape / np.array([H_orig, W_orig])
-            print(ratio.shape, points.shape)
+            # print(ratio.shape, points.shape)
             points = np.round(points*ratio)
         img = np.array(img, np.float32)
         points = np.array(points, np.int32)
@@ -74,7 +74,7 @@ class CrowdDataset(Dataset):
         gt[points[:, 0], points[:, 1]] = 1
         gt = gt[:, :, np.newaxis].astype('float32')
         
-        if mode == 'train':
+        if mode == 'train' or self.mode == 'val':
             density = gaussian_filter_density(gt, self.gamma, self.k, self.adaptive)
             density = cv2.resize(density, (density.shape[1] // 8, density.shape[0] // 8), interpolation=cv2.INTER_LINEAR) * 64
             density = density[:, :, np.newaxis].astype('float32')
@@ -95,24 +95,25 @@ class CrowdDataset(Dataset):
                 density = self.densities[i]
         else:
             img_f = self.image_files[i]
-            if self.mode == 'train':
-                X, density, gt = self.load_example(img_f)
-            X, gt = self.load_example(img_f, mode='test')
+            if self.mode == 'train' or self.mode == 'val':
+                X, density, gt = self.load_example(img_f, self.mode)
+            else:
+                X, gt = self.load_example(img_f, mode='test')
 
         if self.transform:
-            if self.mode == 'train':
+            if self.mode == 'train' or self.mode == 'val':
                 X, density, gt = self.transform([X, density, gt])
             else:
                 X, gt = self.transform([X, gt])
 
-        if self.mode == 'train':
+        if self.mode == 'train' or self.mode == 'val':
             return X, density, gt
         return X, gt, img_f
 
 
 class CrowdSeq(CrowdDataset):
     def __init__(self,
-                 train=True,
+                 mode='train',
                  path='../../ds/dronebird',
                  out_shape=[1080, 1920],
                  transform=None,
@@ -121,7 +122,7 @@ class CrowdSeq(CrowdDataset):
                  k_nearest=3,
                  max_len=None,
                  load_all=False):
-        super(CrowdSeq, self).__init__(train=train,
+        super(CrowdSeq, self).__init__(mode=mode,
                                        path=path,
                                        out_shape=out_shape,
                                        transform=transform,
@@ -170,17 +171,17 @@ class CrowdSeq(CrowdDataset):
         # build the sequences
         X = torch.zeros(self.max_len, 3, self.out_shape[0], self.out_shape[1])
         gt = torch.zeros(self.max_len, 1, self.out_shape[0], self.out_shape[1])
-        if self.mode == 'train':              
+        if self.mode == 'train' or self.mode == 'val':              
             density = torch.zeros(self.max_len, 1, self.out_shape[0]//8, self.out_shape[1]//8)
         names = []
         for j, img_f in enumerate(seq):
             idx = self.img2idx[img_f]
-            if self.mode == 'train':
+            if self.mode == 'train' or self.mode == 'val':
                 X[j], density[j], gt[j] = super().__getitem__(idx)
             else:
                 X[j], gt[j], name = super().__getitem__(idx)
                 names.append(name)
-        if self.mode == 'train':
+        if self.mode == 'train' or self.mode == 'val':
             return X, density, gt, seq_len
         return X, gt, seq_len, names
 
@@ -206,7 +207,7 @@ if __name__ == '__main__':
     #         i, count.sum(), density.sum()))
     path = '../../ds/dronebird'
     
-    data = CrowdSeq(train=True,
+    data = CrowdSeq(mode='train',
                     path=path,
                     load_all=False,
                     max_len=1,
