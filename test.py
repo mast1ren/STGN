@@ -15,16 +15,71 @@ from sklearn.metrics import mean_squared_error,mean_absolute_error
 import scipy.io as sio
 
 def get_seq_class(seq, set):
-    backlight = ['DJI_0021', 'DJI_0022', 'DJI_0032', 'DJI_0202', 'DJI_0339', 'DJI_0340']
-    # cloudy = ['DJI_0519', 'DJI_0554']
-    
-    # uhd = ['DJI_0332', 'DJI_0334', 'DJI_0339', 'DJI_0340', 'DJI_0342', 'DJI_0343', 'DJI_345', 'DJI_0348', 'DJI_0519', 'DJI_0544']
+    backlight = [
+        'DJI_0021',
+        'DJI_0022',
+        'DJI_0032',
+        'DJI_0202',
+        'DJI_0339',
+        'DJI_0340',
+        'DJI_0463',
+        'DJI_0003',
+    ]
 
-    fly = ['DJI_0177', 'DJI_0174', 'DJI_0022', 'DJI_0180', 'DJI_0181', 'DJI_0200', 'DJI_0544', 'DJI_0012', 'DJI_0178', 'DJI_0343', 'DJI_0185', 'DJI_0195']
+    fly = [
+        'DJI_0177',
+        'DJI_0174',
+        'DJI_0022',
+        'DJI_0180',
+        'DJI_0181',
+        'DJI_0200',
+        'DJI_0544',
+        'DJI_0012',
+        'DJI_0178',
+        'DJI_0343',
+        'DJI_0185',
+        'DJI_0195',
+        'DJI_0996',
+        'DJI_0977',
+        'DJI_0945',
+        'DJI_0946',
+        'DJI_0091',
+        'DJI_0442',
+        'DJI_0466',
+        'DJI_0459',
+        'DJI_0464',
+    ]
 
-    angle_90 = ['DJI_0179', 'DJI_0186', 'DJI_0189', 'DJI_0191', 'DJI_0196', 'DJI_0190']
+    angle_90 = [
+        'DJI_0179',
+        'DJI_0186',
+        'DJI_0189',
+        'DJI_0191',
+        'DJI_0196',
+        'DJI_0190',
+        'DJI_0070',
+        'DJI_0091',
+    ]
 
-    mid_size = ['DJI_0012', 'DJI_0013', 'DJI_0014', 'DJI_0021', 'DJI_0022', 'DJI_0026', 'DJI_0028', 'DJI_0028', 'DJI_0030', 'DJI_0028', 'DJI_0030', 'DJI_0034','DJI_0200', 'DJI_0544']
+    mid_size = [
+        'DJI_0012',
+        'DJI_0013',
+        'DJI_0014',
+        'DJI_0021',
+        'DJI_0022',
+        'DJI_0026',
+        'DJI_0028',
+        'DJI_0028',
+        'DJI_0030',
+        'DJI_0028',
+        'DJI_0030',
+        'DJI_0034',
+        'DJI_0200',
+        'DJI_0544',
+        'DJI_0463',
+        'DJI_0001',
+        'DJI_0149',
+    ]
 
     light = 'sunny'
     bird = 'stand'
@@ -44,7 +99,7 @@ def get_seq_class(seq, set):
     #     resolution = 'uhd'
     
     count = 'sparse'
-    loca = sio.loadmat(os.path.join('../../ds/dronebird/', set, 'ground_truth', 'GT_img'+str(seq[-3:])+'000.mat'))['locations']
+    loca = sio.loadmat(os.path.join('../../nas-public-linkdata/ds/dronebird/', set, 'ground_truth', 'GT_img'+str(seq[-3:])+'000.mat'))['locations']
     if loca.shape[0] > 150:
         count = 'crowded'
     return light, angle, bird, size, count
@@ -104,7 +159,7 @@ def main():
             args['shape'] = [480, 640]
             args['channel'] = 128
             
-        dataset_path = os.path.join('../../ds', dataset)
+        dataset_path = os.path.join('../../nas-public-linkdata/ds', dataset)
         valid_data = CrowdSeq(mode='test',
                              path=dataset_path,
                              out_shape=args['shape'],
